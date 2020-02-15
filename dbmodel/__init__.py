@@ -3,6 +3,7 @@ import sqlite3
 import traceback as tb
 
 
+
 class Column:
     def __init__(self, name, datatype, primary_key=False, default=None):
         self.name = name
@@ -20,11 +21,15 @@ class Column:
         self.foreign_key_column = columnname
 
     def __str__(self):
+        pkey = ""
+        if self.primary_key is True:
+            pkey ="primary key"
         if self.foreign_key_table is not None:
-            return f"Name : {self.name} Data type : {self.datatype}  Default Value : {self.default}  pkey : {self.primary_key}  fkey table :  {self.foreign_key_table}  fkey column : {self.foreign_key_column} "
+            return f"{self.name}  {self.datatype} {pkey} fkey:  {self.foreign_key_table}/{self.foreign_key_column} "
 
-        return f"Name : {self.name} Data type : {self.datatype}  Default Value : {self.default} pkey : {self.primary_key}"
+        return f"{self.name}  {self.datatype} {pkey}"
 
+    
 class Table:
     def __init__(self, tablename):
         self.name = tablename
@@ -73,6 +78,15 @@ class DB:
             tb.print_exc()
             print("Cannot execute ", querystr)
             return None
+
+    def record(self, tablename, pkey_column, pkey_value):
+        if tablename in self.tables.keys():
+            cur = self.connection.cursor()
+            rec = self.tables[tablename].query(cur, f" where {pkey_column}={pkey_value}")
+            if rec is not None:
+                rec = rec[0]
+            return rec
+
 
             
 class DBSQLite(DB):
