@@ -75,5 +75,8 @@ This line will create a dbtablewidget for "city" table.
     self.citylist = DBTableWidget(self.widget4, self.db, "city")
 
 This line connects "district" dbtablewidget to "city" dbtablewidget:
-
+    
     self.districtlist.setMaster(self.citylist, "city_id")   
+    
+## Demo
+![video](testapp.mp4)
