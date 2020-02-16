@@ -19,10 +19,11 @@ class MainWindow(QDialog, Ui_Dialog):
         self.district = DBComboBox(self.widget2, self.db, "district", "name", "id")
         self.district.setMaster(self.city, "city_id")
 
-        self.citylist = DBTableWidget(self.widget3, self.db, "district")
-        self.citylist.setMaster(self.city, "city_id")
-        self.district_nav = DBNavigatorWidget(self.widget4, self.db, "district")
-
+        self.districtlist = DBTableWidget(self.widget3, self.db, "district")
+        self.districtlist.setMaster(self.city, "city_id")
+        #self.district_nav = DBNavigatorWidget(self.widget4, self.db, "district")
+        self.citylist = DBTableWidget(self.widget4, self.db, "city")
+        self.districtlist.setMaster(self.citylist, "city_id")
         self.show()
         
             

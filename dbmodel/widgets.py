@@ -135,7 +135,6 @@ class DBNavigatorWidget(QWidget):
         self.btnDBNavAccept.setText(QCoreApplication.translate("DBNavigatorWidget", u"Ok", None))
     # retranslateUi
 
-
     def DBNavFirst(self):
         pass
 
@@ -163,11 +162,16 @@ class DBTableWidget(QTableWidget):
 
     signalCellChange = Signal(object)
     signalMasterId = Signal(object)
-    
+    signalRowChanged = Signal(object)
+
     def __init__(self, parent,  db, tablename, default_id = None):
         super(DBTableWidget,self).__init__(parent)
-        
+        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setSizePolicy(sizePolicy)
+        self.current_row = None
+        self.selected_id = None
         self.db = db
+        self.setFixedWidth(parent.width())
         self.table = tablename
         self.dataquery = f"select  * from {self.table}"
         self.clear()
@@ -185,11 +189,24 @@ class DBTableWidget(QTableWidget):
                 self.setItem(i, j,QTableWidgetItem( str(k)))                              
                 j+=1
             i+=1
+        self.cellClicked.connect(self.check_row)
+        self.selected_id = int(self.itemAt(0,0).text())
+        self.current_row = 0
         #self.itemChanged.connect(self.cellChanged)
+
+    def check_row(self, x,y):
+        if x != self.current_row:
+            self.signalRowChanged.emit(int(self.item(x,0).text()))
+            self.selected_id = int(self.item(x,0).text())
+            self.current_row = int(self.item(x,0).text())
+
+
 
     def refill(self,obj):
         self.clear()
         records = self.db.execute(self.dataquery + f" where {self.mastercolumn} = {obj} ")
+        self.setRowCount(len(records))
+
         i=0
         for record in records:
             j=0
@@ -216,7 +233,11 @@ class DBTableWidget(QTableWidget):
             if (mycolumn.foreign_key_column not in otherwidget.db.tables[otherwidget.table].columns.keys()):
                 raise Exception(f"Foreign key column {mycolumn.foreign_key_column} not found in {otherwidget.table}")
             else: # everything looks ok, create the connection
-                otherwidget.signalMasterId.connect(self.refill)
+                tp = type(otherwidget)
+                if  tp  is DBComboBox:
+                    otherwidget.signalMasterId.connect(self.refill)
+                if tp is DBTableWidget:
+                    otherwidget.signalRowChanged.connect(self.refill)
                 self.mastercolumn = mycolumn_name
                 self.refill(otherwidget.selected_id)
 
