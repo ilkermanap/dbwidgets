@@ -48,7 +48,7 @@ To create the table objects inside database object, call extract()
     self.db.extract()
 
 Place combobox widget for city table. Here, self.widget1 is the placeholder on ui definition.
-self.db is the database, "city" is the name of the table, "name" is the column for displaying inside combobox. 
+self.db is the database, "city" is the name of the table, "name" is the column for displaying inside combobox. 34 is the optional  default valeu of the primary key for the combobox to display first.
 
     self.city = DBComboBox(self.widget1, self.db, "city", "name", "id", 34)
 
