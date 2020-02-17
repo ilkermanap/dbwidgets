@@ -1,8 +1,10 @@
 # dbmodel
 
-Creates an object representation of given database. Aim is to generate data aware pyside2 widgets with master detail relationships defined automatically from database definitions. No gui widget generation implemented yet.
+Creates an object representation of given database. Aim is to generate data aware pyside2 widgets with master detail relationships defined automatically from database definitions. 
 
-Postgresql and SQLite  databases are implemented.
+* DBCombobox is implemented. 
+* DBTableWidget is partly implemented.
+* Postgresql and SQLite  databases are implemented.
 
 Extracts column information, primary keys, and foreign keys if exists.
 
