@@ -1,5 +1,5 @@
-from dbmodel import DBSQLite
-from dbmodel.widgets import DBComboBox, DBTableWidget, DBNavigatorWidget
+from dbwidgets import DBSQLite
+from dbwidgets.widgets import DBComboBox, DBTableWidget, DBNavigatorWidget
 import  sys
 
 from PySide2.QtWidgets import QApplication, QDialog

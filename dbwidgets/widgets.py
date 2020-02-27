@@ -164,7 +164,7 @@ class DBTableWidget(QTableWidget):
     signalMasterId = Signal(object)
     signalRowChanged = Signal(object)
 
-    def __init__(self, parent,  db, tablename, default_id = None):
+    def __init__(self, parent,  db, tablename, default_id = None, ):
         super(DBTableWidget,self).__init__(parent)
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setSizePolicy(sizePolicy)
@@ -173,6 +173,12 @@ class DBTableWidget(QTableWidget):
         self.db = db
         self.setFixedWidth(parent.width())
         self.table = tablename
+        """
+        SELECT Orders.OrderID, Customers.CustomerName, Orders.OrderDate
+        FROM Orders
+        INNER JOIN Customers ON Orders.CustomerID=Customers.CustomerID; 
+        """
+
         self.dataquery = f"select  * from {self.table}"
         self.clear()
         self.current_id = None
@@ -220,7 +226,7 @@ class DBTableWidget(QTableWidget):
         pass                
 
     
-    def setMaster(self, otherwidget, mycolumn_name):
+    def setMaster(self, otherwidget, mycolumn_name, other_table_column_to_display=None):
         mycolumn = self.db.tables[self.table].columns[mycolumn_name]
         # check if requested connection is valid
         if ( mycolumn.foreign_key_table is None ):
@@ -234,9 +240,10 @@ class DBTableWidget(QTableWidget):
                 raise Exception(f"Foreign key column {mycolumn.foreign_key_column} not found in {otherwidget.table}")
             else: # everything looks ok, create the connection
                 tp = type(otherwidget)
+                
                 if  tp  is DBComboBox:
                     otherwidget.signalMasterId.connect(self.refill)
-                if tp is DBTableWidget:
+                if tp is DBTableWidget:                    
                     otherwidget.signalRowChanged.connect(self.refill)
                 self.mastercolumn = mycolumn_name
                 self.refill(otherwidget.selected_id)

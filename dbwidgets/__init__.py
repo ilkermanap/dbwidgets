@@ -12,14 +12,27 @@ class Column:
         self.primary_key = primary_key
         self.foreign_key_table = None
         self.foreign_key_column = None
+        self.foreign_key_join_column = None
+        self.join_type = None
 
     def setPrimary(self):
         self.primary_key = True
         
-    def addForeignKey(self, tablename, columnname):
+    def addForeignKey(self, tablename, columnname, join_column=None, join_type="INNER"):
         self.foreign_key_table = tablename
         self.foreign_key_column = columnname
+        if join_column is not None:
+            self.foreign_key_join_column = join_column
+            # if not given explicitly, default join type is INNER
+            self.join_type = join_type
 
+    def setJoinColumn(self, join_column, join_type="INNER"):
+        if self.foreign_key_table is None:
+            raise Exception(f"No foreign key defined for this column : {self.name}. Can't set join column")
+        self.foreign_key_join_column = join_column
+        # if not given explicitly, default join type is INNER
+        self.join_type = join_type
+                                       
     def __str__(self):
         pkey = ""
         if self.primary_key is True:
