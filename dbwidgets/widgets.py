@@ -1,19 +1,39 @@
-from PySide2.QtWidgets import QComboBox, QTableWidget, QTableWidgetItem, QWidget
+from PySide2.QtWidgets import QTableWidgetItem, QWidget
 from PySide2.QtWidgets import QVBoxLayout
 from PySide2.QtCore import Signal
-from PySide2.QtCore import (QCoreApplication, QMetaObject, QObject, QPoint,
-    QRect, QSize, QUrl, Qt)
-from PySide2.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont,
-    QFontDatabase, QIcon, QLinearGradient, QPalette, QPainter, QPixmap,
-    QRadialGradient)
+from PySide2.QtCore import (QCoreApplication, QMetaObject )
 from PySide2.QtWidgets import *
 
-from . import *
-
 class DBComboBox(QComboBox):
+    """
+    Attributes
+    ----------
+    parent : QWidget
+        Parent widget for the combobox
+
+    db : DB object
+        Database to connect to.
+
+    table : str
+        Name of the table
+
+    textcolumn : str
+        Name of the column to display
+
+    idcolumn : str
+        Name of the column to emit via signal as id.
+
+    default_id : Variable, optional
+        Value of idcolumn to set as selected record.
+
+    Returns
+    -------
+    DBComboBox : dbwidgets.DBComboBox
+        DBComboBox widget
+
+    """
 
     signalMasterId = Signal(object)
-    
     def __init__(self, parent,  db, tablename, textcolumn, idcolumn, default_id = None):
         super(DBComboBox, self).__init__(parent)
         self.table = tablename
@@ -36,6 +56,12 @@ class DBComboBox(QComboBox):
                 i+=1
                 
     def refill(self,obj):
+        """
+        Reset the contents of the combobox filtering with obj, which send by another widget.
+
+        :param obj: Emitted via another widget
+
+        """
         self.clear()
         values = self.db.execute(self.dataquery + f" where {self.mastercolumn} = {obj} ")
         for id, text in values:        
@@ -43,11 +69,19 @@ class DBComboBox(QComboBox):
 
             
     def idxChanged(self):
+        """
+        If another item  is selected, the id of that column emitted via self.signalMasterId.
+
+        """
         self.selected_id = self.itemData(self.currentIndex())
         self.signalMasterId.emit(self.itemData(self.currentIndex()))
 
                 
     def fill(self):
+        """
+        Fills the combobox from table rows.
+
+        """
         self.clear()
         values = self.db.execute(self.dataquery)
         for id, text in values:        
@@ -55,6 +89,21 @@ class DBComboBox(QComboBox):
 
 
     def setMaster(self, otherwidget, mycolumn_name):
+        """
+        Sets the master widget. The items in the combobox will be filtered with the value
+        comes from the master widget's signalMasterId signal.
+
+        Raises exception if
+
+        * There is no foreign key in the current table,
+        * Foreign key table name is not the same as master table name
+        * Foreign key column name is not present inside master table.
+
+        :param otherwidget: Master widget that holds the master table.
+        :param mycolumn_name: Column name in the detail table.
+
+        """
+
         mycolumn = self.db.tables[self.table].columns[mycolumn_name]
         # check if requested connection is valid
         if ( mycolumn.foreign_key_table is None ):
@@ -72,7 +121,11 @@ class DBComboBox(QComboBox):
                 self.refill(otherwidget.selected_id)
                 
 class DBNavigatorWidget(QWidget):
+    """
+    DBNavigatorWidget will provide a compound widget to display/edit/delete
+    individual rows from tables.
 
+    """
     def __init__(self, parent, db, tablename):
         super(DBNavigatorWidget, self).__init__(parent)
         self.db = db
@@ -159,7 +212,28 @@ class DBNavigatorWidget(QWidget):
 
 
 class DBTableWidget(QTableWidget):
+    """
+    DBTableWidget provides a QTableWidget with a table.
 
+    Attributes
+    ----------
+
+    parent : QWidget
+        The parent widget on user interface to put the DBTableWidget on.
+
+    db : DB object
+        Database to connect to
+
+    table : str
+        Name of the table to display on DBTableWidget
+
+    dataquery : str
+        Default SQL query to fill the DBTableWidget
+
+    current_id : Variable
+        The selected row's primary key value
+
+    """
     signalCellChange = Signal(object)
     signalMasterId = Signal(object)
     signalRowChanged = Signal(object)
@@ -173,12 +247,6 @@ class DBTableWidget(QTableWidget):
         self.db = db
         self.setFixedWidth(parent.width())
         self.table = tablename
-        """
-        SELECT Orders.OrderID, Customers.CustomerName, Orders.OrderDate
-        FROM Orders
-        INNER JOIN Customers ON Orders.CustomerID=Customers.CustomerID; 
-        """
-
         self.dataquery = f"select  * from {self.table}"
         self.clear()
         self.current_id = None
@@ -198,17 +266,33 @@ class DBTableWidget(QTableWidget):
         self.cellClicked.connect(self.check_row)
         self.selected_id = int(self.itemAt(0,0).text())
         self.current_row = 0
-        #self.itemChanged.connect(self.cellChanged)
 
-    def check_row(self, x,y):
+    def check_row(self, x, y):
+        """
+        Check if the selected row is changed.
+        Set selected_id attribute to that row's primary key value
+
+        This method is invoked via cellClicked signal. It is not expected to call it from application.
+
+        """
         if x != self.current_row:
             self.signalRowChanged.emit(int(self.item(x,0).text()))
             self.selected_id = int(self.item(x,0).text())
             self.current_row = int(self.item(x,0).text())
 
 
-
     def refill(self,obj):
+        """
+        If a master widget is defined for this widget, change the contents of the DBTableWidget using
+        the foreign key from master widget.
+
+        Parameters
+        ----------
+
+        obj : Variable
+            Foreign key value emitted from master widget.
+
+        """
         self.clear()
         records = self.db.execute(self.dataquery + f" where {self.mastercolumn} = {obj} ")
         self.setRowCount(len(records))
@@ -227,6 +311,27 @@ class DBTableWidget(QTableWidget):
 
     
     def setMaster(self, otherwidget, mycolumn_name, other_table_column_to_display=None):
+        """
+        Sets the master widget. The values in the table widget will be filtered with the value
+        comes from the master widget's signalMasterId signal.
+
+        Raises exception if
+
+        * There is no foreign key in the current table,
+        * Foreign key table name is not the same as master table name
+        * Foreign key column name is not present inside master table.
+
+        Parameters
+        ----------
+
+        otherwidget: One of the DBWidgets
+            Master widget that holds the master table.
+
+        mycolumn_name:  str
+            Column name in the detail table.
+
+        """
+
         mycolumn = self.db.tables[self.table].columns[mycolumn_name]
         # check if requested connection is valid
         if ( mycolumn.foreign_key_table is None ):
@@ -247,5 +352,3 @@ class DBTableWidget(QTableWidget):
                     otherwidget.signalRowChanged.connect(self.refill)
                 self.mastercolumn = mycolumn_name
                 self.refill(otherwidget.selected_id)
-
-
