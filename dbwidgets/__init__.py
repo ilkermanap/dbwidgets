@@ -170,7 +170,7 @@ class Table:
             List of records
 
         """
-        cursor.execute(querystr)
+        cursor.execute(query_string)
         return cursor.fetchall()
 
     def query(self, cur, condition=None):
