@@ -5,7 +5,7 @@ import  sys
 from PySide2.QtWidgets import QApplication, QDialog
 
 
-from ui_test import Ui_Dialog
+from ui_testing import Ui_Dialog
 class MainWindow(QDialog, Ui_Dialog):
     def __init__(self, app=None):
         super(MainWindow, self).__init__()
